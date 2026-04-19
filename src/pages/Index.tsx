@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
-import { Plus, MessageSquare, Sparkles, PanelLeft, Send, Lightbulb, Code2, BookOpen, Wand2 } from "lucide-react";
+import { Plus, MessageSquare, Sparkles, PanelLeft, Send, Lightbulb, Code2, BookOpen, Wand2, MoreHorizontal, Pencil, Trash2, Check, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import BrandLogo from "@/components/BrandLogo";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +58,27 @@ const Index = () => {
     setConversations((prev) => [c, ...prev]);
     setActiveId(c.id);
     setInput("");
+  };
+
+  const renameConversation = (id: string, title: string) => {
+    const trimmed = title.trim();
+    setConversations((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, title: trimmed || "Untitled chat" } : c))
+    );
+  };
+
+  const deleteConversation = (id: string) => {
+    setConversations((prev) => {
+      const next = prev.filter((c) => c.id !== id);
+      if (next.length === 0) {
+        const fresh = newConversation();
+        setActiveId(fresh.id);
+        return [fresh];
+      }
+      if (id === activeId) setActiveId(next[0].id);
+      return next;
+    });
+    toast.success("Chat deleted");
   };
 
   const send = async (textOverride?: string) => {
@@ -182,18 +209,13 @@ const Index = () => {
           <ul className="space-y-0.5">
             {conversations.map((c) => (
               <li key={c.id}>
-                <button
-                  onClick={() => setActiveId(c.id)}
-                  className={cn(
-                    "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors truncate",
-                    c.id === activeId
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      : "hover:bg-sidebar-accent/60 text-muted-foreground"
-                  )}
-                >
-                  <MessageSquare className="size-4 shrink-0 opacity-60" />
-                  <span className="truncate">{c.title}</span>
-                </button>
+                <ConversationItem
+                  conversation={c}
+                  isActive={c.id === activeId}
+                  onSelect={() => setActiveId(c.id)}
+                  onRename={(title) => renameConversation(c.id, title)}
+                  onDelete={() => deleteConversation(c.id)}
+                />
               </li>
             ))}
           </ul>
@@ -376,6 +398,143 @@ const WelcomeScreen = ({ onPick }: { onPick: (prompt: string) => void }) => {
           ))}
         </div>
       </div>
+    </div>
+  );
+};
+
+const ConversationItem = ({
+  conversation,
+  isActive,
+  onSelect,
+  onRename,
+  onDelete,
+}: {
+  conversation: Conversation;
+  isActive: boolean;
+  onSelect: () => void;
+  onRename: (title: string) => void;
+  onDelete: () => void;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(conversation.title);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing) {
+      setDraft(conversation.title);
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      });
+    }
+  }, [isEditing, conversation.title]);
+
+  const commit = () => {
+    onRename(draft);
+    setIsEditing(false);
+  };
+
+  const cancel = () => {
+    setDraft(conversation.title);
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div
+        className={cn(
+          "flex items-center gap-1 px-2 py-1.5 rounded-lg",
+          isActive ? "bg-sidebar-accent" : "bg-sidebar-accent/40"
+        )}
+      >
+        <MessageSquare className="size-4 shrink-0 opacity-60 ml-1" />
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit();
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              cancel();
+            }
+          }}
+          onBlur={commit}
+          className="flex-1 min-w-0 bg-transparent outline-none text-sm border-b border-foreground/20 focus:border-foreground/60 py-0.5"
+        />
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            commit();
+          }}
+          className="p-1 rounded hover:bg-background/60 text-muted-foreground hover:text-foreground"
+          aria-label="Save"
+        >
+          <Check className="size-3.5" />
+        </button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            cancel();
+          }}
+          className="p-1 rounded hover:bg-background/60 text-muted-foreground hover:text-foreground"
+          aria-label="Cancel"
+        >
+          <X className="size-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "group flex items-center gap-1 rounded-lg pr-1 transition-colors",
+        isActive
+          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+          : "hover:bg-sidebar-accent/60 text-muted-foreground"
+      )}
+    >
+      <button
+        onClick={onSelect}
+        onDoubleClick={() => setIsEditing(true)}
+        className={cn(
+          "flex-1 min-w-0 flex items-center gap-2.5 px-3 py-2 text-sm text-left truncate",
+          isActive && "font-medium"
+        )}
+      >
+        <MessageSquare className="size-4 shrink-0 opacity-60" />
+        <span className="truncate">{conversation.title}</span>
+      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className={cn(
+              "p-1.5 rounded-md opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 hover:bg-background/60 transition-opacity",
+              isActive && "opacity-100"
+            )}
+            aria-label="Chat options"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreHorizontal className="size-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem onClick={() => setIsEditing(true)}>
+            <Pencil className="size-4 mr-2" />
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={onDelete}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="size-4 mr-2" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };
