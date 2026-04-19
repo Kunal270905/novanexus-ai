@@ -60,7 +60,26 @@ const Index = () => {
     setInput("");
   };
 
-  const send = async (textOverride?: string) => {
+  const renameConversation = (id: string, title: string) => {
+    const trimmed = title.trim();
+    setConversations((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, title: trimmed || "Untitled chat" } : c))
+    );
+  };
+
+  const deleteConversation = (id: string) => {
+    setConversations((prev) => {
+      const next = prev.filter((c) => c.id !== id);
+      if (next.length === 0) {
+        const fresh = newConversation();
+        setActiveId(fresh.id);
+        return [fresh];
+      }
+      if (id === activeId) setActiveId(next[0].id);
+      return next;
+    });
+    toast.success("Chat deleted");
+  };
     const text = (textOverride ?? input).trim();
     if (!text || isLoading) return;
     setInput("");
