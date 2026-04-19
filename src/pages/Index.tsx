@@ -80,6 +80,8 @@ const Index = () => {
     });
     toast.success("Chat deleted");
   };
+
+  const send = async (textOverride?: string) => {
     const text = (textOverride ?? input).trim();
     if (!text || isLoading) return;
     setInput("");
