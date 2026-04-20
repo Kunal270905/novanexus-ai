@@ -177,7 +177,7 @@ const Index = () => {
     }
   };
 
-  const isEmpty = active.messages.length === 0;
+  const isEmpty = !active || active.messages.length === 0;
 
   return (
     <div className="flex h-dvh w-full bg-background text-foreground overflow-hidden">
@@ -217,28 +217,34 @@ const Index = () => {
             Recent
           </div>
           <ul className="space-y-0.5">
-            {conversations.map((c) => (
-              <li key={c.id}>
-                <ConversationItem
-                  conversation={c}
-                  isActive={c.id === activeId}
-                  onSelect={() => setActiveId(c.id)}
-                  onRename={(title) => renameConversation(c.id, title)}
-                  onDelete={() => deleteConversation(c.id)}
-                />
+            {conversations.length === 0 ? (
+              <li className="px-3 py-6 text-xs text-muted-foreground text-center">
+                No chats yet
               </li>
-            ))}
+            ) : (
+              conversations.map((c) => (
+                <li key={c.id}>
+                  <ConversationItem
+                    conversation={c}
+                    isActive={c.id === activeId}
+                    onSelect={() => setActiveId(c.id)}
+                    onRename={(title) => renameConversation(c.id, title)}
+                    onDelete={() => deleteConversation(c.id)}
+                  />
+                </li>
+              ))
+            )}
           </ul>
         </div>
 
         <div className="p-3 border-t border-sidebar-border">
           <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
             <div className="size-8 rounded-full bg-gradient-brand grid place-items-center text-white text-xs font-semibold">
-              U
+              ✦
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">Guest</div>
-              <div className="text-[11px] text-muted-foreground truncate">Free plan</div>
+              <div className="text-sm font-medium truncate">Explorer</div>
+              <div className="text-[11px] text-muted-foreground truncate">Unlimited curiosity</div>
             </div>
           </div>
         </div>
@@ -266,13 +272,16 @@ const Index = () => {
               </span>
             </div>
           </div>
-          <button
-            onClick={createNew}
-            className="md:hidden p-2 rounded-md hover:bg-secondary"
-            aria-label="New chat"
-          >
-            <Plus className="size-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <button
+              onClick={createNew}
+              className="md:hidden p-2 rounded-md hover:bg-secondary"
+              aria-label="New chat"
+            >
+              <Plus className="size-4" />
+            </button>
+          </div>
         </header>
 
         {/* Conversation area */}
@@ -281,10 +290,10 @@ const Index = () => {
             <WelcomeScreen onPick={(p) => send(p)} />
           ) : (
             <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-8">
-              {active.messages.map((m, i) => (
+              {active!.messages.map((m, i) => (
                 <MessageBubble key={i} msg={m} />
               ))}
-              {isLoading && active.messages[active.messages.length - 1]?.role === "user" && (
+              {isLoading && active!.messages[active!.messages.length - 1]?.role === "user" && (
                 <div className="flex gap-4">
                   <div className="size-8 rounded-full bg-gradient-brand shrink-0 grid place-items-center">
                     <Sparkles className="size-4 text-white" />
