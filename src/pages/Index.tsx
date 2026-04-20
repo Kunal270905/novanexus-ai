@@ -108,16 +108,19 @@ const Index = () => {
 
     const upsertAssistant = (chunk: string) => {
       assistantSoFar += chunk;
-      updateActive((c) => {
-        const msgs = [...c.messages];
-        if (assistantStarted && msgs[msgs.length - 1]?.role === "assistant") {
-          msgs[msgs.length - 1] = { role: "assistant", content: assistantSoFar };
-        } else {
-          msgs.push({ role: "assistant", content: assistantSoFar });
-          assistantStarted = true;
-        }
-        return { ...c, messages: msgs };
-      });
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== conv.id) return c;
+          const msgs = [...c.messages];
+          if (assistantStarted && msgs[msgs.length - 1]?.role === "assistant") {
+            msgs[msgs.length - 1] = { role: "assistant", content: assistantSoFar };
+          } else {
+            msgs.push({ role: "assistant", content: assistantSoFar });
+            assistantStarted = true;
+          }
+          return { ...c, messages: msgs };
+        })
+      );
     };
 
     try {
