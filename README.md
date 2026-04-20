@@ -1,3 +1,3 @@
 # Welcome to your Lovable project
 
-TODO: Document your project here
+Novanexus AI is a transcendent conversational workspace — a calm, glassy dark interface where you think, write, and explore ideas alongside an intelligent assistant. Designed as a "cognitive resonance chamber," it pairs a focused chat canvas with an organized sidebar of conversations you can rename or delete inline, so your thinking stays fluid and clutter-free. Every detail — from the soft typography to the quiet animations — is crafted to make each exchange feel intentional, elegant, and quietly powerful: a portal where human curiosity meets machine clarity.
