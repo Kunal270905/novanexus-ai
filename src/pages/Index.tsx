@@ -90,14 +90,17 @@ const Index = () => {
     if (!text || isLoading) return;
     setInput("");
 
+    const conv = ensureActive();
     const userMsg: Msg = { role: "user", content: text };
-    const baseMessages = [...active.messages, userMsg];
+    const baseMessages = [...conv.messages, userMsg];
 
-    updateActive((c) => ({
-      ...c,
-      title: c.messages.length === 0 ? text.slice(0, 40) : c.title,
-      messages: baseMessages,
-    }));
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === conv.id
+          ? { ...c, title: c.messages.length === 0 ? text.slice(0, 40) : c.title, messages: baseMessages }
+          : c
+      )
+    );
     setIsLoading(true);
 
     let assistantSoFar = "";
