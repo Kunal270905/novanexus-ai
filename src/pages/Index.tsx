@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import BrandLogo from "@/components/BrandLogo";
+import ThemeToggle from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -31,14 +32,14 @@ const newConversation = (): Conversation => ({
 });
 
 const Index = () => {
-  const [conversations, setConversations] = useState<Conversation[]>([newConversation()]);
-  const [activeId, setActiveId] = useState(conversations[0].id);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const active = conversations.find((c) => c.id === activeId)!;
+  const active = conversations.find((c) => c.id === activeId) ?? null;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -60,6 +61,14 @@ const Index = () => {
     setInput("");
   };
 
+  const ensureActive = (): Conversation => {
+    if (active) return active;
+    const c = newConversation();
+    setConversations((prev) => [c, ...prev]);
+    setActiveId(c.id);
+    return c;
+  };
+
   const renameConversation = (id: string, title: string) => {
     const trimmed = title.trim();
     setConversations((prev) =>
@@ -70,12 +79,7 @@ const Index = () => {
   const deleteConversation = (id: string) => {
     setConversations((prev) => {
       const next = prev.filter((c) => c.id !== id);
-      if (next.length === 0) {
-        const fresh = newConversation();
-        setActiveId(fresh.id);
-        return [fresh];
-      }
-      if (id === activeId) setActiveId(next[0].id);
+      if (id === activeId) setActiveId(next[0]?.id ?? null);
       return next;
     });
     toast.success("Chat deleted");
