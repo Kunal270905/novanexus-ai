@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
-import { Plus, MessageSquare, Sparkles, PanelLeft, Send, Lightbulb, Code2, BookOpen, Wand2, MoreHorizontal, Pencil, Trash2, Check, X } from "lucide-react";
+import { Plus, MessageSquare, Sparkles, PanelLeft, Send, Lightbulb, Code2, BookOpen, Wand2, MoreHorizontal, Pencil, Trash2, Check, X, Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +37,18 @@ const Index = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [search, setSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const filteredConversations = search.trim()
+    ? conversations.filter((c) => {
+        const q = search.toLowerCase();
+        return (
+          c.title.toLowerCase().includes(q) ||
+          c.messages.some((m) => m.content.toLowerCase().includes(q))
+        );
+      })
+    : conversations;
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
 
@@ -212,17 +223,39 @@ const Index = () => {
           </button>
         </div>
 
+        <div className="px-3 mt-3">
+          <div className="relative">
+            <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search chats"
+              className="w-full pl-8 pr-7 py-2 text-sm rounded-lg bg-card border border-sidebar-border outline-none focus:border-foreground/20 placeholder:text-muted-foreground"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-sidebar-accent"
+                aria-label="Clear search"
+              >
+                <X className="size-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="flex-1 overflow-y-auto scrollbar-thin px-2 mt-4">
           <div className="px-2 pb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Recent
+            {search.trim() ? "Results" : "Recent"}
           </div>
           <ul className="space-y-0.5">
-            {conversations.length === 0 ? (
+            {filteredConversations.length === 0 ? (
               <li className="px-3 py-6 text-xs text-muted-foreground text-center">
-                No chats yet
+                {search.trim() ? "No matches" : "No chats yet"}
               </li>
             ) : (
-              conversations.map((c) => (
+              filteredConversations.map((c) => (
                 <li key={c.id}>
                   <ConversationItem
                     conversation={c}
@@ -239,8 +272,8 @@ const Index = () => {
 
         <div className="p-3 border-t border-sidebar-border">
           <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
-            <div className="size-8 rounded-full bg-gradient-brand grid place-items-center text-white text-xs font-semibold">
-              ✦
+            <div className="size-8 rounded-full bg-gradient-brand-soft grid place-items-center shrink-0">
+              <BrandLogo size={20} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate">Explorer</div>
