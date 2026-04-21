@@ -85,7 +85,14 @@ const Auth = () => {
             <CardTitle>Welcome</CardTitle>
             <CardDescription>Sign in or create an account to continue.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <Button variant="outline" className="w-full" onClick={handleGoogle} disabled={loading}>
+              Continue with Google
+            </Button>
+            <div className="relative text-center text-xs text-muted-foreground">
+              <span className="bg-background px-2 relative z-10">or</span>
+              <div className="absolute inset-0 top-1/2 border-t" />
+            </div>
             <Tabs defaultValue="signin">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign in</TabsTrigger>
