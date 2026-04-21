@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { z } from "zod";
 import BrandLogo from "@/components/BrandLogo";
+import { lovable } from "@/integrations/lovable";
 
 const emailSchema = z.string().trim().email("Invalid email").max(255);
 const passwordSchema = z.string().min(6, "Min 6 characters").max(72);
@@ -61,6 +62,17 @@ const Auth = () => {
     if (error) toast.error(error.message);
   };
 
+  const handleGoogle = async () => {
+    setLoading(true);
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/dashboard`,
+    });
+    if (result.error) {
+      toast.error(result.error.message ?? "Google sign-in failed");
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
       <div className="w-full max-w-md">
@@ -73,7 +85,14 @@ const Auth = () => {
             <CardTitle>Welcome</CardTitle>
             <CardDescription>Sign in or create an account to continue.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <Button variant="outline" className="w-full" onClick={handleGoogle} disabled={loading}>
+              Continue with Google
+            </Button>
+            <div className="relative text-center text-xs text-muted-foreground">
+              <span className="bg-background px-2 relative z-10">or</span>
+              <div className="absolute inset-0 top-1/2 border-t" />
+            </div>
             <Tabs defaultValue="signin">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign in</TabsTrigger>
