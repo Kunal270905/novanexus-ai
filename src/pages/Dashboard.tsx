@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { LogOut, Search, Star, Trash2, Loader2, TrendingUp, TrendingDown } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import ThemeToggle from "@/components/ThemeToggle";
+import RoiTracker from "@/components/RoiTracker";
+import ArbitrageFinder from "@/components/ArbitrageFinder";
 
 interface Quote {
   symbol: string;
@@ -218,6 +220,9 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
+
+        {user && <RoiTracker userId={user.id} />}
+        <ArbitrageFinder />
       </main>
     </div>
   );
