@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { z } from "zod";
 import BrandLogo from "@/components/BrandLogo";
+import { lovable } from "@/integrations/lovable";
 
 const emailSchema = z.string().trim().email("Invalid email").max(255);
 const passwordSchema = z.string().min(6, "Min 6 characters").max(72);
@@ -59,6 +60,17 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) toast.error(error.message);
+  };
+
+  const handleGoogle = async () => {
+    setLoading(true);
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/dashboard`,
+    });
+    if (result.error) {
+      toast.error(result.error.message ?? "Google sign-in failed");
+      setLoading(false);
+    }
   };
 
   return (
