@@ -6,10 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Search, Star, Trash2, Sparkles, Loader2, TrendingUp, TrendingDown } from "lucide-react";
+import { LogOut, Search, Star, Trash2, Loader2, TrendingUp, TrendingDown } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import ThemeToggle from "@/components/ThemeToggle";
-import ReactMarkdown from "react-markdown";
 
 interface Quote {
   symbol: string;
@@ -37,8 +36,6 @@ const Dashboard = () => {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [searching, setSearching] = useState(false);
   const [watchlist, setWatchlist] = useState<WatchItem[]>([]);
-  const [insight, setInsight] = useState<string>("");
-  const [insightLoading, setInsightLoading] = useState(false);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -79,7 +76,6 @@ const Dashboard = () => {
     if (!symbol) return;
     setSearching(true);
     setQuote(null);
-    setInsight("");
     try {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stock-quote?symbol=${encodeURIComponent(symbol)}`;
       const r = await fetch(url, {
@@ -113,23 +109,6 @@ const Dashboard = () => {
     const { error } = await supabase.from("watchlist").delete().eq("id", id);
     if (error) toast.error(error.message);
     else loadWatchlist();
-  };
-
-  const fetchInsight = async () => {
-    if (!quote) return;
-    setInsightLoading(true);
-    setInsight("");
-    try {
-      const { data, error } = await supabase.functions.invoke("stock-insights", {
-        body: { symbol: quote.symbol, context: { price: quote.price, changePercent: quote.changePercent } },
-      });
-      if (error) throw error;
-      setInsight(data.content);
-    } catch (err: any) {
-      toast.error(err.message ?? "AI insight failed");
-    } finally {
-      setInsightLoading(false);
-    }
   };
 
   const signOut = async () => {
@@ -196,14 +175,6 @@ const Dashboard = () => {
                     <Button variant="outline" size="sm" onClick={addToWatchlist}>
                       <Star className="h-4 w-4 mr-2" /> Save
                     </Button>
-                    <Button size="sm" onClick={fetchInsight} disabled={insightLoading}>
-                      {insightLoading ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-4 w-4 mr-2" />
-                      )}
-                      AI insights
-                    </Button>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm text-muted-foreground">
@@ -212,11 +183,6 @@ const Dashboard = () => {
                   <div>Low: <span className="text-foreground">${quote.low.toFixed(2)}</span></div>
                   <div>Volume: <span className="text-foreground">{quote.volume.toLocaleString()}</span></div>
                 </div>
-                {insight && (
-                  <div className="rounded-md bg-muted/50 p-4 prose prose-sm dark:prose-invert max-w-none">
-                    <ReactMarkdown>{insight}</ReactMarkdown>
-                  </div>
-                )}
               </div>
             )}
           </CardContent>
