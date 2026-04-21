@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { LogOut, Search, Star, Trash2, Sparkles, Loader2, TrendingUp, TrendingDown } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 import ReactMarkdown from "react-markdown";
 
 interface Quote {
