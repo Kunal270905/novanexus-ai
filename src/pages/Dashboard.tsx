@@ -76,7 +76,6 @@ const Dashboard = () => {
     if (!symbol) return;
     setSearching(true);
     setQuote(null);
-    setInsight("");
     try {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stock-quote?symbol=${encodeURIComponent(symbol)}`;
       const r = await fetch(url, {
@@ -110,23 +109,6 @@ const Dashboard = () => {
     const { error } = await supabase.from("watchlist").delete().eq("id", id);
     if (error) toast.error(error.message);
     else loadWatchlist();
-  };
-
-  const fetchInsight = async () => {
-    if (!quote) return;
-    setInsightLoading(true);
-    setInsight("");
-    try {
-      const { data, error } = await supabase.functions.invoke("stock-insights", {
-        body: { symbol: quote.symbol, context: { price: quote.price, changePercent: quote.changePercent } },
-      });
-      if (error) throw error;
-      setInsight(data.content);
-    } catch (err: any) {
-      toast.error(err.message ?? "AI insight failed");
-    } finally {
-      setInsightLoading(false);
-    }
   };
 
   const signOut = async () => {
