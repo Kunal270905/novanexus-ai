@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
-import { Plus, MessageSquare, Sparkles, PanelLeft, Send, Lightbulb, Code2, BookOpen, Wand2, MoreHorizontal, Pencil, Trash2, Check, X, Search } from "lucide-react";
+import { Plus, MessageSquare, Sparkles, PanelLeft, Send, Lightbulb, Code2, BookOpen, Wand2, MoreHorizontal, Pencil, Trash2, Check, X, Search, LineChart, ShoppingBag, PiggyBank } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -426,10 +426,31 @@ const MessageBubble = ({ msg }: { msg: Msg }) => {
   );
 };
 
+const FEATURE_CARDS = [
+  {
+    icon: LineChart,
+    title: "Stock Analyzer",
+    desc: "Look up live quotes and save tickers to your watchlist.",
+    href: "/dashboard",
+  },
+  {
+    icon: ShoppingBag,
+    title: "Arbitrage Finder",
+    desc: "Spot profitable products with cost vs sell price margins.",
+    href: "/dashboard",
+  },
+  {
+    icon: PiggyBank,
+    title: "ROI Tracker",
+    desc: "Log investments and returns to see your ROI %.",
+    href: "/dashboard",
+  },
+];
+
 const WelcomeScreen = ({ onPick }: { onPick: (prompt: string) => void }) => {
   return (
     <div className="h-full flex flex-col items-center justify-center px-4 py-12">
-      <div className="max-w-2xl w-full text-center space-y-10">
+      <div className="max-w-3xl w-full text-center space-y-10">
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="flex justify-center">
             <BrandLogo size={56} />
@@ -440,6 +461,22 @@ const WelcomeScreen = ({ onPick }: { onPick: (prompt: string) => void }) => {
           <p className="text-muted-foreground text-base md:text-lg font-light">
             How can I help you think today?
           </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+          {FEATURE_CARDS.map((f) => (
+            <a
+              key={f.title}
+              href={f.href}
+              className="group p-4 rounded-2xl border border-border bg-card hover:border-foreground/20 hover:shadow-soft transition-all"
+            >
+              <div className="size-10 rounded-xl bg-gradient-brand-soft grid place-items-center mb-3 group-hover:scale-105 transition-transform">
+                <f.icon className="size-5 text-foreground/70" />
+              </div>
+              <div className="text-sm font-semibold mb-1">{f.title}</div>
+              <div className="text-xs text-muted-foreground">{f.desc}</div>
+            </a>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
