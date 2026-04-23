@@ -435,10 +435,10 @@ const MessageBubble = ({ msg }: { msg: Msg }) => {
           "size-8 rounded-full shrink-0 grid place-items-center text-xs font-semibold",
           isUser
             ? "bg-secondary text-foreground border border-border"
-            : "bg-gradient-brand text-white"
+            : "bg-gradient-brand-soft"
         )}
       >
-        {isUser ? "U" : <Sparkles className="size-4" />}
+        {isUser ? "U" : <BrandLogo size={18} />}
       </div>
       <div className={cn("flex-1 min-w-0", isUser && "flex justify-end")}>
         {isUser ? (
