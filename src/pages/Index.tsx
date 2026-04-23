@@ -341,6 +341,12 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <button
+              onClick={() => setActiveId(null)}
+              className="text-xs px-3 py-1.5 rounded-md hover:bg-secondary transition-colors"
+            >
+              Home
+            </button>
             <a
               href="/dashboard"
               className="text-xs px-3 py-1.5 rounded-md hover:bg-secondary transition-colors"
