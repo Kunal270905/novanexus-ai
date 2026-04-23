@@ -33,8 +33,37 @@ const newConversation = (): Conversation => ({
 });
 
 const Index = () => {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>(() => {
+    try {
+      const raw = localStorage.getItem("nx_conversations");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed as Conversation[];
+      }
+    } catch {}
+    return [];
+  });
+  const [activeId, setActiveId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("nx_active_conv") || null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Persist conversations
+  useEffect(() => {
+    try {
+      localStorage.setItem("nx_conversations", JSON.stringify(conversations));
+    } catch {}
+  }, [conversations]);
+
+  useEffect(() => {
+    try {
+      if (activeId) localStorage.setItem("nx_active_conv", activeId);
+      else localStorage.removeItem("nx_active_conv");
+    } catch {}
+  }, [activeId]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
