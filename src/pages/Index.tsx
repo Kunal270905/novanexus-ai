@@ -166,15 +166,12 @@ const Index = () => {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Please sign in to chat.");
-        return;
-      }
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${session?.access_token ?? PUBLISHABLE_KEY}`,
+          apikey: PUBLISHABLE_KEY,
         },
         body: JSON.stringify({ messages: baseMessages }),
       });
