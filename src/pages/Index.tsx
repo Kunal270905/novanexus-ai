@@ -369,8 +369,8 @@ const Index = () => {
               ))}
               {isLoading && active!.messages[active!.messages.length - 1]?.role === "user" && (
                 <div className="flex gap-4">
-                  <div className="size-8 rounded-full bg-gradient-brand shrink-0 grid place-items-center">
-                    <Sparkles className="size-4 text-white" />
+                  <div className="size-8 rounded-full bg-gradient-brand-soft shrink-0 grid place-items-center">
+                    <BrandLogo size={18} />
                   </div>
                   <div className="flex items-center gap-1.5 pt-2.5">
                     <span className="size-2 rounded-full bg-foreground/40 animate-bounce [animation-delay:0ms]" />
