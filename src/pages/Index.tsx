@@ -33,8 +33,37 @@ const newConversation = (): Conversation => ({
 });
 
 const Index = () => {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>(() => {
+    try {
+      const raw = localStorage.getItem("nx_conversations");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed as Conversation[];
+      }
+    } catch {}
+    return [];
+  });
+  const [activeId, setActiveId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("nx_active_conv") || null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Persist conversations
+  useEffect(() => {
+    try {
+      localStorage.setItem("nx_conversations", JSON.stringify(conversations));
+    } catch {}
+  }, [conversations]);
+
+  useEffect(() => {
+    try {
+      if (activeId) localStorage.setItem("nx_active_conv", activeId);
+      else localStorage.removeItem("nx_active_conv");
+    } catch {}
+  }, [activeId]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -340,8 +369,8 @@ const Index = () => {
               ))}
               {isLoading && active!.messages[active!.messages.length - 1]?.role === "user" && (
                 <div className="flex gap-4">
-                  <div className="size-8 rounded-full bg-gradient-brand shrink-0 grid place-items-center">
-                    <Sparkles className="size-4 text-white" />
+                  <div className="size-8 rounded-full bg-gradient-brand-soft shrink-0 grid place-items-center">
+                    <BrandLogo size={18} />
                   </div>
                   <div className="flex items-center gap-1.5 pt-2.5">
                     <span className="size-2 rounded-full bg-foreground/40 animate-bounce [animation-delay:0ms]" />
@@ -406,10 +435,10 @@ const MessageBubble = ({ msg }: { msg: Msg }) => {
           "size-8 rounded-full shrink-0 grid place-items-center text-xs font-semibold",
           isUser
             ? "bg-secondary text-foreground border border-border"
-            : "bg-gradient-brand text-white"
+            : "bg-gradient-brand-soft"
         )}
       >
-        {isUser ? "U" : <Sparkles className="size-4" />}
+        {isUser ? "U" : <BrandLogo size={18} />}
       </div>
       <div className={cn("flex-1 min-w-0", isUser && "flex justify-end")}>
         {isUser ? (
