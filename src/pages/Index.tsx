@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
-import { Plus, MessageSquare, Sparkles, PanelLeft, Send, Lightbulb, Code2, BookOpen, Wand2, MoreHorizontal, Pencil, Trash2, Check, X, Search, LineChart, ShoppingBag, PiggyBank, Paperclip, FileText, ImageIcon } from "lucide-react";
+import { Plus, MessageSquare, Sparkles, PanelLeft, Send, Lightbulb, Code2, BookOpen, Wand2, MoreHorizontal, Pencil, Trash2, Check, X, Search, LineChart, ShoppingBag, PiggyBank, Paperclip, FileText } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
