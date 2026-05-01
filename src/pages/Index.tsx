@@ -456,6 +456,43 @@ const Index = () => {
         <div className="px-4 md:px-6 pb-6 pt-2 bg-background">
           <div className="max-w-3xl mx-auto">
             <div className="relative rounded-3xl border border-border bg-card shadow-soft focus-within:border-foreground/20 focus-within:shadow-glow transition-all">
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 p-3 pb-0">
+                  {attachments.map((a, i) => (
+                    <div
+                      key={i}
+                      className="group relative flex items-center gap-2 pl-1.5 pr-7 py-1.5 rounded-xl border border-border bg-secondary/50 max-w-[220px]"
+                    >
+                      {a.isImage ? (
+                        <img
+                          src={a.dataUrl}
+                          alt={a.name}
+                          className="size-9 rounded-md object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="size-9 rounded-md bg-background grid place-items-center shrink-0">
+                          <FileText className="size-4 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-xs font-medium truncate">{a.name}</div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {(a.size / 1024).toFixed(0)} KB
+                        </div>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setAttachments((prev) => prev.filter((_, idx) => idx !== i))
+                        }
+                        className="absolute top-1 right-1 p-0.5 rounded-full bg-background/80 hover:bg-background border border-border opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Remove attachment"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -468,15 +505,36 @@ const Index = () => {
                 placeholder="Message Novanexus…"
                 rows={1}
                 disabled={isLoading}
-                className="w-full resize-none bg-transparent outline-none px-5 py-4 pr-14 text-[15px] placeholder:text-muted-foreground max-h-48 scrollbar-thin"
+                className="w-full resize-none bg-transparent outline-none pl-14 pr-14 py-4 text-[15px] placeholder:text-muted-foreground max-h-48 scrollbar-thin"
                 style={{ minHeight: 56 }}
               />
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*,.pdf,.txt,.md,.csv,.json,.doc,.docx"
+                className="hidden"
+                onChange={(e) => {
+                  handleFiles(e.target.files);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading || attachments.length >= MAX_ATTACHMENTS}
+                className="absolute left-2 bottom-2 size-10 rounded-2xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Attach files"
+                title="Attach images or files"
+              >
+                <Paperclip className="size-4" />
+              </button>
               <button
                 onClick={() => send()}
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading || (!input.trim() && attachments.length === 0)}
                 className={cn(
                   "absolute right-2 bottom-2 size-10 rounded-2xl grid place-items-center transition-all",
-                  input.trim() && !isLoading
+                  (input.trim() || attachments.length > 0) && !isLoading
                     ? "bg-gradient-brand text-white hover:scale-105 shadow-soft"
                     : "bg-secondary text-muted-foreground cursor-not-allowed"
                 )}
