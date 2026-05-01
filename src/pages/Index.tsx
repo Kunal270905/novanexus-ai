@@ -567,8 +567,35 @@ const MessageBubble = ({ msg }: { msg: Msg }) => {
       >
         {isUser ? "U" : <BrandLogo size={18} />}
       </div>
-      <div className={cn("flex-1 min-w-0", isUser && "flex justify-end")}>
-        {isUser ? (
+      <div className={cn("flex-1 min-w-0 space-y-2", isUser && "flex flex-col items-end")}>
+        {msg.attachments && msg.attachments.length > 0 && (
+          <div className={cn("flex flex-wrap gap-2", isUser && "justify-end")}>
+            {msg.attachments.map((a, i) =>
+              a.isImage ? (
+                <a
+                  key={i}
+                  href={a.dataUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block rounded-xl overflow-hidden border border-border max-w-[260px]"
+                >
+                  <img src={a.dataUrl} alt={a.name} className="block max-h-60 object-cover" />
+                </a>
+              ) : (
+                <a
+                  key={i}
+                  href={a.dataUrl}
+                  download={a.name}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-secondary/50 hover:bg-secondary text-sm max-w-[260px]"
+                >
+                  <FileText className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{a.name}</span>
+                </a>
+              )
+            )}
+          </div>
+        )}
+        {msg.content && (isUser ? (
           <div className="inline-block px-4 py-2.5 rounded-2xl bg-secondary text-foreground text-[15px] leading-relaxed max-w-full">
             {msg.content}
           </div>
@@ -576,7 +603,7 @@ const MessageBubble = ({ msg }: { msg: Msg }) => {
           <div className="prose prose-sm md:prose-base max-w-none text-foreground prose-p:leading-relaxed prose-headings:font-serif prose-headings:font-normal prose-pre:bg-secondary prose-pre:border prose-pre:border-border prose-code:text-foreground prose-code:bg-secondary prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-strong:text-foreground prose-a:text-foreground prose-a:underline-offset-4">
             <ReactMarkdown>{msg.content}</ReactMarkdown>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
