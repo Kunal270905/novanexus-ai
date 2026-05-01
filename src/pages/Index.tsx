@@ -80,6 +80,39 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const slots = MAX_ATTACHMENTS - attachments.length;
+    if (slots <= 0) {
+      toast.error(`You can attach up to ${MAX_ATTACHMENTS} files.`);
+      return;
+    }
+    const picked = Array.from(files).slice(0, slots);
+    const next: Attachment[] = [];
+    for (const f of picked) {
+      if (f.size > MAX_FILE_BYTES) {
+        toast.error(`${f.name} is larger than 5MB.`);
+        continue;
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(f);
+        next.push({
+          name: f.name,
+          type: f.type || "application/octet-stream",
+          size: f.size,
+          dataUrl,
+          isImage: f.type.startsWith("image/"),
+        });
+      } catch {
+        toast.error(`Could not read ${f.name}`);
+      }
+    }
+    if (next.length) setAttachments((prev) => [...prev, ...next]);
+  };
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const filteredConversations = search.trim()
