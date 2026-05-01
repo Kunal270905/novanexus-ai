@@ -13,8 +13,20 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Attachment = { name: string; type: string; size: number; dataUrl: string; isImage: boolean };
+type Msg = { role: "user" | "assistant"; content: string; attachments?: Attachment[] };
 type Conversation = { id: string; title: string; messages: Msg[] };
+
+const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
+const MAX_ATTACHMENTS = 4;
+
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 const PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
