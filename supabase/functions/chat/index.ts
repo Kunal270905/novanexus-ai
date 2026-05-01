@@ -9,7 +9,10 @@ const corsHeaders = {
 const MAX_MESSAGES = 50;
 const MAX_CONTENT = 4000;
 
-type ChatMsg = { role: "user" | "assistant"; content: string };
+type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+type ChatMsg = { role: "user" | "assistant"; content: string | ContentPart[] };
 
 function sanitizeMessages(input: unknown): ChatMsg[] | null {
   if (!Array.isArray(input)) return null;
@@ -19,9 +22,27 @@ function sanitizeMessages(input: unknown): ChatMsg[] | null {
     if (!m || typeof m !== "object") return null;
     const role = (m as any).role;
     const content = (m as any).content;
-    if (role !== "user" && role !== "assistant") continue; // strip system/tool
-    if (typeof content !== "string") return null;
-    out.push({ role, content: content.slice(0, MAX_CONTENT) });
+    if (role !== "user" && role !== "assistant") continue;
+    if (typeof content === "string") {
+      out.push({ role, content: content.slice(0, MAX_CONTENT) });
+    } else if (Array.isArray(content)) {
+      const parts: ContentPart[] = [];
+      for (const p of content) {
+        if (!p || typeof p !== "object") continue;
+        if (p.type === "text" && typeof p.text === "string") {
+          parts.push({ type: "text", text: p.text.slice(0, MAX_CONTENT) });
+        } else if (p.type === "image_url" && p.image_url?.url && typeof p.image_url.url === "string") {
+          const url = p.image_url.url;
+          // Allow data URLs (images) and https URLs only
+          if (url.startsWith("data:image/") || url.startsWith("https://")) {
+            parts.push({ type: "image_url", image_url: { url } });
+          }
+        }
+      }
+      if (parts.length) out.push({ role, content: parts });
+    } else {
+      return null;
+    }
   }
   return out.length ? out : null;
 }

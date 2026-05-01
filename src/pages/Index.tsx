@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
-import { Plus, MessageSquare, Sparkles, PanelLeft, Send, Lightbulb, Code2, BookOpen, Wand2, MoreHorizontal, Pencil, Trash2, Check, X, Search, LineChart, ShoppingBag, PiggyBank } from "lucide-react";
+import { Plus, MessageSquare, Sparkles, PanelLeft, Send, Lightbulb, Code2, BookOpen, Wand2, MoreHorizontal, Pencil, Trash2, Check, X, Search, LineChart, ShoppingBag, PiggyBank, Paperclip, FileText } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,8 +13,20 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Attachment = { name: string; type: string; size: number; dataUrl: string; isImage: boolean };
+type Msg = { role: "user" | "assistant"; content: string; attachments?: Attachment[] };
 type Conversation = { id: string; title: string; messages: Msg[] };
+
+const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5MB
+const MAX_ATTACHMENTS = 4;
+
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 const PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -68,7 +80,39 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const slots = MAX_ATTACHMENTS - attachments.length;
+    if (slots <= 0) {
+      toast.error(`You can attach up to ${MAX_ATTACHMENTS} files.`);
+      return;
+    }
+    const picked = Array.from(files).slice(0, slots);
+    const next: Attachment[] = [];
+    for (const f of picked) {
+      if (f.size > MAX_FILE_BYTES) {
+        toast.error(`${f.name} is larger than 5MB.`);
+        continue;
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(f);
+        next.push({
+          name: f.name,
+          type: f.type || "application/octet-stream",
+          size: f.size,
+          dataUrl,
+          isImage: f.type.startsWith("image/"),
+        });
+      } catch {
+        toast.error(`Could not read ${f.name}`);
+      }
+    }
+    if (next.length) setAttachments((prev) => [...prev, ...next]);
+  };
 
   const filteredConversations = search.trim()
     ? conversations.filter((c) => {
@@ -128,21 +172,40 @@ const Index = () => {
 
   const send = async (textOverride?: string) => {
     const text = (textOverride ?? input).trim();
-    if (!text || isLoading) return;
+    const atts = textOverride ? [] : attachments;
+    if ((!text && atts.length === 0) || isLoading) return;
     setInput("");
+    if (!textOverride) setAttachments([]);
 
     const conv = ensureActive();
-    const userMsg: Msg = { role: "user", content: text };
+    const userMsg: Msg = { role: "user", content: text, attachments: atts.length ? atts : undefined };
     const baseMessages = [...conv.messages, userMsg];
 
     setConversations((prev) =>
       prev.map((c) =>
         c.id === conv.id
-          ? { ...c, title: c.messages.length === 0 ? text.slice(0, 40) : c.title, messages: baseMessages }
+          ? { ...c, title: c.messages.length === 0 ? (text || atts[0]?.name || "New chat").slice(0, 40) : c.title, messages: baseMessages }
           : c
       )
     );
     setIsLoading(true);
+
+    // Build payload for AI: convert attachments to multimodal parts
+    const payloadMessages = baseMessages.map((m) => {
+      if (!m.attachments || m.attachments.length === 0) {
+        return { role: m.role, content: m.content };
+      }
+      const parts: any[] = [];
+      const nonImage = m.attachments.filter((a) => !a.isImage);
+      const noteParts = nonImage.length
+        ? `\n\n[Attached files: ${nonImage.map((a) => a.name).join(", ")}]`
+        : "";
+      parts.push({ type: "text", text: (m.content || "(see attached)") + noteParts });
+      for (const a of m.attachments) {
+        if (a.isImage) parts.push({ type: "image_url", image_url: { url: a.dataUrl } });
+      }
+      return { role: m.role, content: parts };
+    });
 
     let assistantSoFar = "";
     let assistantStarted = false;
@@ -176,7 +239,7 @@ const Index = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ messages: baseMessages }),
+        body: JSON.stringify({ messages: payloadMessages }),
       });
 
       if (!resp.ok || !resp.body) {
@@ -393,6 +456,43 @@ const Index = () => {
         <div className="px-4 md:px-6 pb-6 pt-2 bg-background">
           <div className="max-w-3xl mx-auto">
             <div className="relative rounded-3xl border border-border bg-card shadow-soft focus-within:border-foreground/20 focus-within:shadow-glow transition-all">
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 p-3 pb-0">
+                  {attachments.map((a, i) => (
+                    <div
+                      key={i}
+                      className="group relative flex items-center gap-2 pl-1.5 pr-7 py-1.5 rounded-xl border border-border bg-secondary/50 max-w-[220px]"
+                    >
+                      {a.isImage ? (
+                        <img
+                          src={a.dataUrl}
+                          alt={a.name}
+                          className="size-9 rounded-md object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="size-9 rounded-md bg-background grid place-items-center shrink-0">
+                          <FileText className="size-4 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-xs font-medium truncate">{a.name}</div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {(a.size / 1024).toFixed(0)} KB
+                        </div>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setAttachments((prev) => prev.filter((_, idx) => idx !== i))
+                        }
+                        className="absolute top-1 right-1 p-0.5 rounded-full bg-background/80 hover:bg-background border border-border opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Remove attachment"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -405,15 +505,36 @@ const Index = () => {
                 placeholder="Message Novanexus…"
                 rows={1}
                 disabled={isLoading}
-                className="w-full resize-none bg-transparent outline-none px-5 py-4 pr-14 text-[15px] placeholder:text-muted-foreground max-h-48 scrollbar-thin"
+                className="w-full resize-none bg-transparent outline-none pl-14 pr-14 py-4 text-[15px] placeholder:text-muted-foreground max-h-48 scrollbar-thin"
                 style={{ minHeight: 56 }}
               />
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*,.pdf,.txt,.md,.csv,.json,.doc,.docx"
+                className="hidden"
+                onChange={(e) => {
+                  handleFiles(e.target.files);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading || attachments.length >= MAX_ATTACHMENTS}
+                className="absolute left-2 bottom-2 size-10 rounded-2xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Attach files"
+                title="Attach images or files"
+              >
+                <Paperclip className="size-4" />
+              </button>
               <button
                 onClick={() => send()}
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading || (!input.trim() && attachments.length === 0)}
                 className={cn(
                   "absolute right-2 bottom-2 size-10 rounded-2xl grid place-items-center transition-all",
-                  input.trim() && !isLoading
+                  (input.trim() || attachments.length > 0) && !isLoading
                     ? "bg-gradient-brand text-white hover:scale-105 shadow-soft"
                     : "bg-secondary text-muted-foreground cursor-not-allowed"
                 )}
@@ -446,8 +567,35 @@ const MessageBubble = ({ msg }: { msg: Msg }) => {
       >
         {isUser ? "U" : <BrandLogo size={18} />}
       </div>
-      <div className={cn("flex-1 min-w-0", isUser && "flex justify-end")}>
-        {isUser ? (
+      <div className={cn("flex-1 min-w-0 space-y-2", isUser && "flex flex-col items-end")}>
+        {msg.attachments && msg.attachments.length > 0 && (
+          <div className={cn("flex flex-wrap gap-2", isUser && "justify-end")}>
+            {msg.attachments.map((a, i) =>
+              a.isImage ? (
+                <a
+                  key={i}
+                  href={a.dataUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block rounded-xl overflow-hidden border border-border max-w-[260px]"
+                >
+                  <img src={a.dataUrl} alt={a.name} className="block max-h-60 object-cover" />
+                </a>
+              ) : (
+                <a
+                  key={i}
+                  href={a.dataUrl}
+                  download={a.name}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-secondary/50 hover:bg-secondary text-sm max-w-[260px]"
+                >
+                  <FileText className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{a.name}</span>
+                </a>
+              )
+            )}
+          </div>
+        )}
+        {msg.content && (isUser ? (
           <div className="inline-block px-4 py-2.5 rounded-2xl bg-secondary text-foreground text-[15px] leading-relaxed max-w-full">
             {msg.content}
           </div>
@@ -455,7 +603,7 @@ const MessageBubble = ({ msg }: { msg: Msg }) => {
           <div className="prose prose-sm md:prose-base max-w-none text-foreground prose-p:leading-relaxed prose-headings:font-serif prose-headings:font-normal prose-pre:bg-secondary prose-pre:border prose-pre:border-border prose-code:text-foreground prose-code:bg-secondary prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-strong:text-foreground prose-a:text-foreground prose-a:underline-offset-4">
             <ReactMarkdown>{msg.content}</ReactMarkdown>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
