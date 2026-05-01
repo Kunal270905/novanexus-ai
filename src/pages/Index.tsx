@@ -172,21 +172,40 @@ const Index = () => {
 
   const send = async (textOverride?: string) => {
     const text = (textOverride ?? input).trim();
-    if (!text || isLoading) return;
+    const atts = textOverride ? [] : attachments;
+    if ((!text && atts.length === 0) || isLoading) return;
     setInput("");
+    if (!textOverride) setAttachments([]);
 
     const conv = ensureActive();
-    const userMsg: Msg = { role: "user", content: text };
+    const userMsg: Msg = { role: "user", content: text, attachments: atts.length ? atts : undefined };
     const baseMessages = [...conv.messages, userMsg];
 
     setConversations((prev) =>
       prev.map((c) =>
         c.id === conv.id
-          ? { ...c, title: c.messages.length === 0 ? text.slice(0, 40) : c.title, messages: baseMessages }
+          ? { ...c, title: c.messages.length === 0 ? (text || atts[0]?.name || "New chat").slice(0, 40) : c.title, messages: baseMessages }
           : c
       )
     );
     setIsLoading(true);
+
+    // Build payload for AI: convert attachments to multimodal parts
+    const payloadMessages = baseMessages.map((m) => {
+      if (!m.attachments || m.attachments.length === 0) {
+        return { role: m.role, content: m.content };
+      }
+      const parts: any[] = [];
+      const nonImage = m.attachments.filter((a) => !a.isImage);
+      const noteParts = nonImage.length
+        ? `\n\n[Attached files: ${nonImage.map((a) => a.name).join(", ")}]`
+        : "";
+      parts.push({ type: "text", text: (m.content || "(see attached)") + noteParts });
+      for (const a of m.attachments) {
+        if (a.isImage) parts.push({ type: "image_url", image_url: { url: a.dataUrl } });
+      }
+      return { role: m.role, content: parts };
+    });
 
     let assistantSoFar = "";
     let assistantStarted = false;
@@ -220,7 +239,7 @@ const Index = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ messages: baseMessages }),
+        body: JSON.stringify({ messages: payloadMessages }),
       });
 
       if (!resp.ok || !resp.body) {
