@@ -113,7 +113,6 @@ const Index = () => {
     }
     if (next.length) setAttachments((prev) => [...prev, ...next]);
   };
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const filteredConversations = search.trim()
     ? conversations.filter((c) => {
