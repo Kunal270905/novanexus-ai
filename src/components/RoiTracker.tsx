@@ -115,7 +115,7 @@ const RoiTracker = ({ userId }: { userId: string }) => {
                     <TrendingUp className="h-3 w-3" />
                     {pct.toFixed(2)}%
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => remove(e.id)}>
+                  <Button variant="ghost" size="sm" onClick={() => remove(e.id)} aria-label={`Delete ROI entry ${e.label}`}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </li>

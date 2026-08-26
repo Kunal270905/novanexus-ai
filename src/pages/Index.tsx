@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Seo from "@/components/Seo";
 import BrandLogo from "@/components/BrandLogo";
 import ThemeToggle from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
@@ -290,6 +291,11 @@ const Index = () => {
 
   return (
     <div className="flex h-dvh w-full bg-background text-foreground overflow-hidden">
+      <Seo
+        title="Novanexus AI — multimodal AI assistant & financial workspace"
+        description="Chat with Novanexus AI to think, write and analyse. Attach images and files, save conversations, and track stocks and ROI in one calm workspace."
+        path="/"
+      />
       {/* Sidebar */}
       <aside
         className={cn(
@@ -466,7 +472,7 @@ const Index = () => {
                       {a.isImage ? (
                         <img
                           src={a.dataUrl}
-                          alt={a.name}
+                          alt={`Attached image: ${a.name}`}
                           className="size-9 rounded-md object-cover shrink-0"
                         />
                       ) : (
@@ -579,7 +585,7 @@ const MessageBubble = ({ msg }: { msg: Msg }) => {
                   rel="noreferrer"
                   className="block rounded-xl overflow-hidden border border-border max-w-[260px]"
                 >
-                  <img src={a.dataUrl} alt={a.name} className="block max-h-60 object-cover" />
+                  <img src={a.dataUrl} alt={`Attached image: ${a.name}`} className="block max-h-60 object-cover" />
                 </a>
               ) : (
                 <a
@@ -640,6 +646,7 @@ const WelcomeScreen = ({ onPick }: { onPick: (prompt: string) => void }) => {
           </div>
           <h1 className="font-serif text-5xl md:text-6xl tracking-tight leading-[1.05]">
             Hello, I'm <span className="text-gradient-brand italic">Novanexus</span>
+            <span className="sr-only"> AI — multimodal AI assistant for thinking, writing and financial analysis</span>
           </h1>
           <p className="text-muted-foreground text-base md:text-lg font-light">
             How can I help you think today?
@@ -647,6 +654,7 @@ const WelcomeScreen = ({ onPick }: { onPick: (prompt: string) => void }) => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+          <h2 className="sr-only">Tools</h2>
           {FEATURE_CARDS.map((f) => (
             <a
               key={f.title}
@@ -663,6 +671,7 @@ const WelcomeScreen = ({ onPick }: { onPick: (prompt: string) => void }) => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+          <h2 className="sr-only">Prompt suggestions</h2>
           {PROMPT_SUGGESTIONS.map((s) => (
             <button
               key={s.label}

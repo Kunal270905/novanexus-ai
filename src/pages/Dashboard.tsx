@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { LogOut, Search, Star, Trash2, Loader2, TrendingUp, TrendingDown } from "lucide-react";
+import Seo from "@/components/Seo";
 import BrandLogo from "@/components/BrandLogo";
 import ThemeToggle from "@/components/ThemeToggle";
 import RoiTracker from "@/components/RoiTracker";
@@ -121,6 +122,12 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Your dashboard — stocks, watchlist & ROI | Novanexus AI"
+        description="Your Novanexus AI workspace: look up live stock quotes, keep a saved watchlist and track return on investment across your positions."
+        path="/dashboard"
+        noindex
+      />
       <header className="border-b">
         <div className="container mx-auto flex items-center justify-between py-4 px-4">
           <Link to="/" className="flex items-center gap-2">
@@ -137,6 +144,7 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
+        <h1 className="text-2xl font-semibold tracking-tight">Your financial dashboard</h1>
         <Card>
           <CardHeader>
             <CardTitle>Welcome, {profile?.display_name ?? user?.email}</CardTitle>
@@ -157,7 +165,7 @@ const Dashboard = () => {
                 onChange={(e) => setSearch(e.target.value)}
                 className="uppercase"
               />
-              <Button type="submit" disabled={searching}>
+              <Button type="submit" disabled={searching} aria-label="Search ticker">
                 {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               </Button>
             </form>
@@ -211,7 +219,7 @@ const Dashboard = () => {
                     >
                       {w.symbol}
                     </button>
-                    <Button variant="ghost" size="sm" onClick={() => removeFromWatchlist(w.id)}>
+                    <Button variant="ghost" size="sm" onClick={() => removeFromWatchlist(w.id)} aria-label={`Remove ${w.symbol} from watchlist`}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </li>
