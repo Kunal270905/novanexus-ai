@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { z } from "zod";
 import BrandLogo from "@/components/BrandLogo";
+import Seo from "@/components/Seo";
 import { lovable } from "@/integrations/lovable";
 
 const emailSchema = z.string().trim().email("Invalid email").max(255);
@@ -75,7 +76,13 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
-      <div className="w-full max-w-md">
+      <Seo
+        title="Sign in or create an account — Novanexus AI"
+        description="Sign in or register for Novanexus AI to save conversations, track stocks in your watchlist and measure investment ROI."
+        path="/auth"
+      />
+      <main className="w-full max-w-md">
+        <h1 className="sr-only">Sign in or create your Novanexus AI account</h1>
         <Link to="/" className="flex items-center justify-center gap-2 mb-6">
           <BrandLogo className="h-8 w-8" />
           <span className="text-xl font-semibold">Novanexus AI</span>
@@ -135,7 +142,7 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 };
