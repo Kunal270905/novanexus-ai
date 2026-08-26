@@ -291,6 +291,11 @@ const Index = () => {
 
   return (
     <div className="flex h-dvh w-full bg-background text-foreground overflow-hidden">
+      <Seo
+        title="Novanexus AI — multimodal AI assistant & financial workspace"
+        description="Chat with Novanexus AI to think, write and analyse. Attach images and files, save conversations, and track stocks and ROI in one calm workspace."
+        path="/"
+      />
       {/* Sidebar */}
       <aside
         className={cn(
