@@ -17,7 +17,7 @@ const apply = (t: Theme) => {
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(
-    () => (localStorage.getItem(STORAGE_KEY) as Theme) || "auto"
+    () => (localStorage.getItem(STORAGE_KEY) as Theme) || "dark"
   );
   const [resolved, setResolved] = useState<"light" | "dark">(() => apply(theme));
 
